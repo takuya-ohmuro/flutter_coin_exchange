@@ -16,6 +16,7 @@ class _PriceScreenState extends State<PriceScreen> {
   NetworkHelper networkHelper = NetworkHelper();
   ExchangeModel model = ExchangeModel();
   String labelText;
+  int selectedIndex = 0;
 
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
@@ -31,9 +32,7 @@ class _PriceScreenState extends State<PriceScreen> {
       value: selectedCurrency,
       items: dropdownItems,
       onChanged: (value) {
-        setState(() {
-          selectedCurrency = value;
-        });
+        getData(value);
       },
     );
   }
@@ -48,10 +47,22 @@ class _PriceScreenState extends State<PriceScreen> {
       backgroundColor: Colors.lightBlue,
       itemExtent: 32.0,
       onSelectedItemChanged: (selectedIndex) {
-        print(selectedIndex);
+        this.selectedIndex = selectedIndex;
+        getData(currenciesList[selectedIndex]);
       },
       children: pickerItems,
     );
+  }
+
+  List<ExchangedCard> cards() {
+    List<ExchangedCard> list = [];
+    for (String coin in cryptoList) {
+      var item = ExchangedCard(
+        labelText: labelText,
+      );
+      list.add(item);
+    }
+    return list;
   }
 
   //TODO: Create a method here called getData() to get the coin data from coin_data.dart
@@ -60,11 +71,18 @@ class _PriceScreenState extends State<PriceScreen> {
   void initState() {
     super.initState();
     //TODO: Call getData() when the screen loads up.
-    networkHelper.getData((value) {
-      setState(() {
-        labelText =
-            '1 ${value.assetIdQuote} = ${value.rate.toInt()} ${value.assetIdBase}';
-      });
+    getData(currenciesList.first);
+  }
+
+  void getData(String currency) {
+    networkHelper.getData(currency, (value) {
+      int index = 0;
+      for (ExchangeModel model in value) {
+        setState(() {
+          cards()[index].labelText =
+              '1 ${model.assetIdBase} = ${model.rate.toInt()} ${model.assetIdQuote}';
+        });
+      }
     });
   }
 
@@ -78,27 +96,9 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  //TODO: Update the Text Widget with the live bitcoin data here.
-                  labelText ?? '',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: cards(),
           ),
           Container(
             height: 150.0,
@@ -108,6 +108,37 @@ class _PriceScreenState extends State<PriceScreen> {
             child: Platform.isIOS ? iOSPicker() : androidDropdown(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ExchangedCard extends StatelessWidget {
+  ExchangedCard({this.labelText});
+
+  String labelText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
+      child: Card(
+        color: Colors.lightBlueAccent,
+        elevation: 5.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+          child: Text(
+            labelText ?? '',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 20.0,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }
