@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'coin_data.dart';
 import 'dart:io' show Platform;
+import 'networkHelper.dart';
+import 'exchangeModel.dart';
 
 class PriceScreen extends StatefulWidget {
   @override
@@ -10,6 +12,10 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = 'USD';
+
+  NetworkHelper networkHelper = NetworkHelper();
+  ExchangeModel model = ExchangeModel();
+  String labelText;
 
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
@@ -54,6 +60,12 @@ class _PriceScreenState extends State<PriceScreen> {
   void initState() {
     super.initState();
     //TODO: Call getData() when the screen loads up.
+    networkHelper.getData((value) {
+      setState(() {
+        labelText =
+            '1 ${value.assetIdQuote} = ${value.rate.toInt()} ${value.assetIdBase}';
+      });
+    });
   }
 
   @override
@@ -78,7 +90,7 @@ class _PriceScreenState extends State<PriceScreen> {
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
                   //TODO: Update the Text Widget with the live bitcoin data here.
-                  '1 BTC = ? USD',
+                  labelText ?? '',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
